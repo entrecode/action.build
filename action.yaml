@@ -61,13 +61,8 @@ runs:
   #     echo "ENV=prod" >> $GITHUB_ENV
   #   shell: bash
 
-  - name: test ACTION_ENABLE_TESTING
-    run: |
-      echo "ACTION_ENABLE_TESTING=${{ inputs.ACTION_ENABLE_TESTING }}"
-    shell: bash
-
   - name: Set up docker buildx for tester
-    if: ${{ inputs.ACTION_ENABLE_TESTING }} == 'true'
+    if: ${{ inputs.ACTION_ENABLE_TESTING }} === 'true'
     id: tester
     uses: docker/build-push-action@v3
     with:
@@ -82,14 +77,14 @@ runs:
        PAT=${{ inputs.PAT }}
 
   - name: Test
-    if: ${{ inputs.ACTION_ENABLE_TESTING }} == 'true' && steps.tester.outcome == 'success'
+    if: ${{ inputs.ACTION_ENABLE_TESTING }} === 'true' && steps.tester.outcome == 'success'
     id: testrunner
     run: |
       docker run --rm ghcr.io/${{ inputs.REPOSITORY }}:tester 
     shell: bash
 
   - name: Build and push
-    if: ${{ inputs.ACTION_ENABLE_TESTING }} == 'false' || steps.testrunner.outcome == 'success'
+    if: ${{ inputs.ACTION_ENABLE_TESTING }} === 'false' || steps.testrunner.outcome == 'success'
     uses: docker/build-push-action@v3
     with:
       context: .
