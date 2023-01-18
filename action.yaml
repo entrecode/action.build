@@ -22,10 +22,10 @@ inputs:
 outputs:
   version:
     description: 'version of the container'
-    value: ${{ steps.set-output.version }}
+    value: ${{ steps.set-output.outputs.version }}
   env:
     description: 'environment of the container'
-    value: ${{ steps.set-output.env }}
+    value: ${{ steps.set-output.outputs.env }}
 
 runs:
   using: 'composite'
