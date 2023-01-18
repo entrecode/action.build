@@ -27,6 +27,14 @@ outputs:
 runs:
   using: 'composite'
   steps:
+  - name: Check COPY . . in Dockerfile
+    run: |
+      if grep -q "COPY . ." ./Dockerfile; then
+        echo "COPY . . is not allowed in Dockerfile"
+        exit 1
+      fi
+    shell: bash
+
   - name: Checkout code
     uses: actions/checkout@v3
 
