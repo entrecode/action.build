@@ -29,7 +29,7 @@ runs:
   steps:
   - name: Check COPY . . in Dockerfile
     run: |
-      if grep -q "COPY . ." ./usr/bin/docker/Dockerfile; then
+      if grep -q "COPY . ." /usr/bin/docker/Dockerfile; then
         echo "COPY . . is not allowed in Dockerfile"
         exit 1
       fi
