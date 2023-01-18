@@ -2,6 +2,9 @@ name: Build-Action
 description: 'build and push to ghcr'
 
 inputs:
+  PAT:  
+    description: 'PAT from repo'
+    required: true
   NAMESPACE:
     description: 'Namespace'
     required: true
@@ -12,12 +15,6 @@ inputs:
     description: 'if set to true, testcontainer will be created and tests will be run'
     required: false
     default: 'false'
-  PAT:  
-    description: 'PAT from repo'
-    required: true
-  # REPOSITORY:
-  #   description: 'Git-Repository'
-  #   required: true
 
 outputs:
   version:
