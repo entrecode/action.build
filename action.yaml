@@ -67,7 +67,7 @@ runs:
     shell: bash
 
   - name: Set up docker buildx for tester
-    if: inputs.ACTION_ENABLE_TESTING === 'true'
+    if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: tester
     uses: docker/build-push-action@v3
     with:
@@ -82,7 +82,7 @@ runs:
        PAT=${{ inputs.PAT }}
 
   - name: Test
-    if: ${{ inputs.ACTION_ENABLE_TESTING }} === 'true' && steps.tester.outcome == 'success'
+    if: ${{ inputs.ACTION_ENABLE_TESTING }} == 'true' && steps.tester.outcome == 'success'
     id: testrunner
     run: |
       docker run --rm ghcr.io/${{ inputs.REPOSITORY }}:tester 
