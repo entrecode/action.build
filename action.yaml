@@ -17,7 +17,7 @@ inputs:
   PAT:  
     description: 'PAT from repo'
     required: true
-  repository:
+  REPOSITORY:
     description: 'github repository'
     required: true
 
