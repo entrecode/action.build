@@ -27,16 +27,17 @@ outputs:
 runs:
   using: 'composite'
   steps:
+
+  - name: Checkout code
+    uses: actions/checkout@v3
+    
   - name: Check COPY . . in Dockerfile
     run: |
-      if grep -q "COPY . ." /usr/bin/docker/Dockerfile; then
+      if grep -q "COPY . ." ./Dockerfile; then
         echo "COPY . . is not allowed in Dockerfile"
         exit 1
       fi
     shell: bash
-
-  - name: Checkout code
-    uses: actions/checkout@v3
 
   - name: Login to Github Registry
     uses: docker/login-action@v2
