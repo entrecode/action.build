@@ -5,17 +5,18 @@ inputs:
   NAMESPACE:
     description: 'Namespace'
     required: true
-    default: ''
   NAME:
     description: 'Name'
     required: true
-    default: ''
   ACTION_ENABLE_TESTING:
     description: 'if set to true, testcontainer will be created and tests will be run'
     required: false
     default: 'false'
   PAT:  
     description: 'PAT from repo'
+    required: true
+  REPOSITORY:
+    description: 'Git-Repository'
     required: true
 
 outputs:
