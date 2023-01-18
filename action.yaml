@@ -15,9 +15,9 @@ inputs:
   PAT:  
     description: 'PAT from repo'
     required: true
-  REPOSITORY:
-    description: 'Git-Repository'
-    required: true
+  # REPOSITORY:
+  #   description: 'Git-Repository'
+  #   required: true
 
 outputs:
   version:
@@ -70,7 +70,7 @@ runs:
       file: ./Dockerfile
       push: true
       target: tester
-      tags: ghcr.io/${{ inputs.REPOSITORY }}:tester
+      tags: ghcr.io/${{ github.repository }}:tester
       cache-from: type=gha
       cache-to: type=gha,mode=max
       build-args: |
@@ -80,7 +80,7 @@ runs:
     if: inputs.ACTION_ENABLE_TESTING == 'true' && steps.tester.outcome == 'success'
     id: testrunner
     run: |
-      docker run --rm ghcr.io/${{ inputs.REPOSITORY }}:tester 
+      docker run --rm ghcr.io/${{ github.repository }}:tester 
     shell: bash
 
   - name: Build and push
@@ -91,7 +91,7 @@ runs:
       file: ./Dockerfile
       push: true
       target: runner
-      tags: ghcr.io/${{ inputs.REPOSITORY }}:${{ env.IMAGE_TAG }}
+      tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
       cache-from: type=gha
       cache-to: type=gha,mode=max
       build-args: |
