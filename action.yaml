@@ -48,7 +48,7 @@ runs:
     uses: martinbeentjes/npm-get-version-action@main
 
   - name: Build Container name for develop
-    if: github.ref == 'refs/heads/develop'
+    # if: github.ref == 'refs/heads/develop'
     run: |
       echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}-dev" >> $GITHUB_ENV
       echo "ENV=stage" >> $GITHUB_ENV
@@ -77,8 +77,8 @@ runs:
        PAT=${{ inputs.PAT }}
 
   - name: Test
-    id: testrunner
     if: steps.tester.outcome == 'success' && ${{ inputs.ACTION_ENABLE_TESTING == 'true' }}
+    id: testrunner
     run: |
       docker run --rm ghcr.io/${{ inputs.REPOSITORY }}:tester 
     shell: bash
