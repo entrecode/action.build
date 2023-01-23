@@ -75,8 +75,7 @@ runs:
       context: .
       file: ./Dockerfile
       push: true
-      labels: |
-        org.opencontainers.image.source=${{ github.event.repository.html_url }}
+      labels: ${{ github.event.repository.html_url }}
       target: tester
       tags: ghcr.io/${{ github.repository }}:tester
       cache-from: type=gha
@@ -98,8 +97,7 @@ runs:
       context: .
       file: ./Dockerfile
       push: true
-      labels: |
-        org.opencontainers.image.source=${{ github.event.repository.html_url }}
+      labels: ${{ github.event.repository.html_url }}
       target: runner
       tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
       cache-from: type=gha
