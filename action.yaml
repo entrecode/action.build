@@ -15,9 +15,6 @@ inputs:
     description: 'if set to true, testcontainer will be created and tests will be run'
     required: false
     default: 'false'
-  GITHUB_TOKEN:
-    description: 'Github Token'
-    required: true
 
 outputs:
   version:
@@ -28,6 +25,7 @@ outputs:
     value: ${{ steps.set-output.outputs.env }}
 
 runs:
+
   using: 'composite'
   steps:
 
@@ -47,7 +45,7 @@ runs:
     with:
       registry: ghcr.io
       username: ${{ github.repository_owner }}
-      password: ${{ inputs.GITHUB_TOKEN }}
+      password: ${{ inputs.PAT }}
 
   - name: Set up Docker Buildx
     uses: docker/setup-buildx-action@v2
