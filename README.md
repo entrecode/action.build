@@ -24,8 +24,7 @@ build:
         NAMESPACE: ${{ vars.NAMESPACE }}
         NAME: ${{ vars.NAME }}
         PAT: ${{ secrets.PAT }}
-        REPOSITORY: ${{ github.repository }}
-        ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }}
+        ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }} # optional when false
 ```
 
 ## inputs
