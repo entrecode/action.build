@@ -61,18 +61,18 @@ runs:
     uses: martinbeentjes/npm-get-version-action@main
 
   - name: Build Container name for develop
-    # if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop'
     run: |
       echo "IMAGE_TAG=dev" >> $GITHUB_ENV
       echo "ENV=stage" >> $GITHUB_ENV
     shell: bash
 
-  # - name: Build Container name for master
-  #   if: github.ref != 'refs/heads/develop'
-  #   run: |
-  #     echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
-  #     echo "ENV=prod" >> $GITHUB_ENV
-  #   shell: bash
+  - name: Build Container name for master
+    if: github.ref != 'refs/heads/develop'
+    run: |
+      echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
+      echo "ENV=prod" >> $GITHUB_ENV
+    shell: bash
 
   - name: Check file existence
     id: check_files
@@ -109,8 +109,7 @@ runs:
     shell: bash
 
   - name: Build and push
-    # if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
-    if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true'
+    if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
       context: .
@@ -124,8 +123,7 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Build and push
-    # if: ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop' )
-    if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false'
+    if: ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
     uses: docker/build-push-action@v3
     with:
       context: .
