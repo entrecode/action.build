@@ -18,6 +18,10 @@ inputs:
   GITHUB_TOKEN:
     description: 'Github Token'
     required: true
+  ACTIVATE_DEV_RUNNER:
+    description: 'if set to true, devRunner container will be created'
+    required: false
+    default: 'false'
 
 outputs:
   version:
@@ -31,7 +35,6 @@ runs:
 
   using: 'composite'
   steps:
-
   - name: Checkout code
     uses: actions/checkout@v3
     
@@ -58,18 +61,18 @@ runs:
     uses: martinbeentjes/npm-get-version-action@main
 
   - name: Build Container name for develop
-    if: github.ref == 'refs/heads/develop'
+    # if: github.ref == 'refs/heads/develop'
     run: |
       echo "IMAGE_TAG=dev" >> $GITHUB_ENV
       echo "ENV=stage" >> $GITHUB_ENV
     shell: bash
 
-  - name: Build Container name for master
-    if: github.ref != 'refs/heads/develop'
-    run: |
-      echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
-      echo "ENV=prod" >> $GITHUB_ENV
-    shell: bash
+  # - name: Build Container name for master
+  #   if: github.ref != 'refs/heads/develop'
+  #   run: |
+  #     echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
+  #     echo "ENV=prod" >> $GITHUB_ENV
+  #   shell: bash
 
   - name: Check file existence
     id: check_files
@@ -106,7 +109,23 @@ runs:
     shell: bash
 
   - name: Build and push
-    if: inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success'
+    # if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
+    if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true'
+    uses: docker/build-push-action@v3
+    with:
+      context: .
+      file: ./Dockerfile
+      push: true
+      target: devRunner
+      tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
+      build-args: |
+        PAT=${{ inputs.PAT }}
+
+  - name: Build and push
+    # if: ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop' )
+    if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false'
     uses: docker/build-push-action@v3
     with:
       context: .
