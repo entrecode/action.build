@@ -22,6 +22,10 @@ inputs:
     description: 'if set to true, devRunner container will be created'
     required: false
     default: 'false'
+  LOCAL_TESTING_SECRET:
+    description: 'local-testing.yaml secret'
+    required: false
+    default: 'false'
 
 outputs:
   version:
@@ -86,6 +90,14 @@ runs:
         rm -f .env.production
     shell: bash
 
+  - name: Write local-testing config file
+    if: inputs.LOCAL_TESTING_SECRET != 'false'
+    uses: "DamianReeves/write-file-action@master"
+    with:
+      path: config/local-testing.yaml
+      contents: |
+        ${{ inputs.LOCAL_TESTING_SECRET }}
+
   - name: Set up docker buildx for tester
     if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: tester
@@ -106,6 +118,12 @@ runs:
     id: testrunner
     run: |
       docker run --rm ghcr.io/${{ github.repository }}:tester 
+    shell: bash
+
+  - name: Remove local testing file
+    if: inputs.LOCAL_TESTING_SECRET != 'false'
+    run: |
+        rm -f config/local-testing.yaml
     shell: bash
 
   - name: Build and push
