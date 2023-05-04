@@ -60,9 +60,16 @@ runs:
   - name: Set up Docker Buildx
     uses: docker/setup-buildx-action@v2
 
+  # - name: get-npm-version
+  #   id: package-version
+  #   uses: martinbeentjes/npm-get-version-action@main
+
   - name: get-npm-version
     id: package-version
-    uses: martinbeentjes/npm-get-version-action@main
+    run: |
+      PACKAGE_VERSION=$(cat package.json | jq '.version' | tr -d '"')
+      echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+    shell: bash
 
   - name: Build Container name for develop
     if: github.ref == 'refs/heads/develop'
