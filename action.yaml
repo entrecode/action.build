@@ -2,7 +2,7 @@ name: Build-Action
 description: 'build and push to ghcr'
 
 inputs:
-  PAT:  
+  PAT:
     description: 'PAT from repo'
     required: true
   NAMESPACE:
@@ -36,12 +36,11 @@ outputs:
     value: ${{ steps.set-output.outputs.env }}
 
 runs:
-
   using: 'composite'
   steps:
   - name: Checkout code
     uses: actions/checkout@v3
-    
+
   - name: Check COPY . . in Dockerfile
     run: |
       if grep -q "COPY.*\. \." ./Dockerfile; then
@@ -89,17 +88,17 @@ runs:
     id: check_files
     uses: andstor/file-existence-action@v2
     with:
-      files: ".env.production, next.config.*"
+      files: '.env.production, next.config.*'
 
   - name: Remove production environment file on develop for next projects
     if: github.ref == 'refs/heads/develop' && steps.check_files.outputs.files_exists == 'true'
     run: |
-        rm -f .env.production
+      rm -f .env.production
     shell: bash
 
   - name: Write local-testing config file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
-    uses: "DamianReeves/write-file-action@master"
+    uses: 'DamianReeves/write-file-action@master'
     with:
       path: config/local-testing.yaml
       contents: |
@@ -118,19 +117,19 @@ runs:
       cache-from: type=gha
       cache-to: type=gha,mode=max
       build-args: |
-       PAT=${{ inputs.PAT }}
+        PAT=${{ inputs.PAT }}
 
   - name: Test
     if: inputs.ACTION_ENABLE_TESTING == 'true' && steps.tester.outcome == 'success'
     id: testrunner
     run: |
-      docker run --rm ghcr.io/${{ github.repository }}:tester 
+      docker run --rm ghcr.io/${{ github.repository }}:tester
     shell: bash
 
   - name: Remove local testing file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
     run: |
-        rm -f config/local-testing.yaml
+      rm -f config/local-testing.yaml
     shell: bash
 
   - name: Build and push
