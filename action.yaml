@@ -113,7 +113,7 @@ runs:
       file: ./Dockerfile
       push: true
       target: tester
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
       tags: ghcr.io/${{ github.repository }}:tester
       cache-from: type=gha
       cache-to: type=gha,mode=max
@@ -141,7 +141,7 @@ runs:
       file: ./Dockerfile
       push: true
       target: devRunner
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
       tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
       cache-from: type=gha
       cache-to: type=gha,mode=max
@@ -156,7 +156,7 @@ runs:
       file: ./Dockerfile
       push: true
       target: runner
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
       tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
       cache-from: type=gha
       cache-to: type=gha,mode=max
