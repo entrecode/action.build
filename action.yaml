@@ -26,6 +26,10 @@ inputs:
     description: 'local-testing.yaml secret'
     required: false
     default: 'false'
+  DOCKERFILE_PATH:
+    description: 'path to Dockerfile'
+    required: false
+    default: '.'
 
 outputs:
   version:
@@ -109,7 +113,7 @@ runs:
     id: tester
     uses: docker/build-push-action@v3
     with:
-      context: .
+      context: ${{ inputs.DOCKERFILE_PATH }}
       file: ./Dockerfile
       push: true
       target: tester
@@ -137,7 +141,7 @@ runs:
     if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
-      context: .
+      context: ${{ inputs.DOCKERFILE_PATH }}
       file: ./Dockerfile
       push: true
       target: devRunner
@@ -152,7 +156,7 @@ runs:
     if: ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
     uses: docker/build-push-action@v3
     with:
-      context: .
+      context: ${{ inputs.DOCKERFILE_PATH }}
       file: ./Dockerfile
       push: true
       target: runner
