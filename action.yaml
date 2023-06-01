@@ -47,7 +47,7 @@ runs:
 
   - name: Check COPY . . in Dockerfile
     run: |
-      if grep -q "COPY.*\. \." ./Dockerfile; then
+      if grep -q "COPY.*\. \." ${{ inputs.DOCKERFILE_PATH }}/Dockerfile; then
         echo "COPY . . is not allowed in Dockerfile"
         exit 1
       fi
@@ -70,7 +70,7 @@ runs:
   - name: get-npm-version
     id: package-version
     run: |
-      PACKAGE_VERSION=$(cat package.json | jq '.version' | tr -d '"')
+      PACKAGE_VERSION=$(cat ${{ inputs.DOCKERFILE_PATH }}/package.json | jq '.version' | tr -d '"')
       echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
     shell: bash
 
