@@ -114,7 +114,7 @@ runs:
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.DOCKERFILE_PATH }}
-      file: ./Dockerfile
+      file: ${{ inputs.DOCKERFILE_PATH }}/Dockerfile
       push: true
       target: tester
       platforms: linux/amd64
@@ -142,7 +142,7 @@ runs:
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.DOCKERFILE_PATH }}
-      file: ./Dockerfile
+      file: ${{ inputs.DOCKERFILE_PATH }}/Dockerfile
       push: true
       target: devRunner
       platforms: linux/amd64
@@ -157,7 +157,7 @@ runs:
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.DOCKERFILE_PATH }}
-      file: ./Dockerfile
+      file: ${{ inputs.DOCKERFILE_PATH }}/Dockerfile
       push: true
       target: runner
       platforms: linux/amd64
