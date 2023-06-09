@@ -35,7 +35,7 @@ build:
 
 
 | Name                    | Type        | Description                                                                                 | Required  | Version      |
-|-------------------------|-------------|---------------------------------------------------------------------------------------------|--------------------------|
+|-------------------------|-------------|---------------------------------------------------------------------------------------------|-----------|--------------|
 | `PAT`                   | String      | Personal Access Token as GitHub secret                                                      | Yes       | latest (v4)  |
 | `NAMESPACE`             | String      | Namespace of the project                                                                    | Yes       | latest (v4)  |
 | `NAME`                  | String      | Name of the project                                                                         | Yes       | latest (v4)  |
