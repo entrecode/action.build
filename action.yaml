@@ -120,7 +120,7 @@ runs:
       push: true
       target: tester
       platforms: linux/amd64
-      tags: ghcr.io/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
+      tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
       cache-from: type=gha
       cache-to: type=gha,mode=max
       build-args: |
@@ -130,7 +130,7 @@ runs:
     if: inputs.ACTION_ENABLE_TESTING == 'true' && steps.tester.outcome == 'success'
     id: testrunner
     run: |
-      docker run --rm ghcr.io/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
+      docker run --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
     shell: bash
 
 # TODO add WORKING_DIRECTORY
@@ -149,7 +149,7 @@ runs:
       push: true
       target: devRunner
       platforms: linux/amd64
-      tags: ghcr.io/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
+      tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
       cache-from: type=gha
       cache-to: type=gha,mode=max
       build-args: |
@@ -164,7 +164,7 @@ runs:
       push: true
       target: runner
       platforms: linux/amd64
-      tags: ghcr.io/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
+      tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
       cache-from: type=gha
       cache-to: type=gha,mode=max
       build-args: |
