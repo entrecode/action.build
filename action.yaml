@@ -26,6 +26,10 @@ inputs:
     description: 'local-testing.yaml secret'
     required: false
     default: 'false'
+  DOCKERFILE_PATH:
+    description: 'path to Dockerfile'
+    required: false
+    default: '.'
 
 outputs:
   version:
@@ -43,7 +47,7 @@ runs:
 
   - name: Check COPY . . in Dockerfile
     run: |
-      if grep -q "COPY.*\. \." ./Dockerfile; then
+      if grep -q "COPY.*\. \." ${{ inputs.DOCKERFILE_PATH }}/Dockerfile; then
         echo "COPY . . is not allowed in Dockerfile"
         exit 1
       fi
@@ -66,7 +70,7 @@ runs:
   - name: get-npm-version
     id: package-version
     run: |
-      PACKAGE_VERSION=$(cat package.json | jq '.version' | tr -d '"')
+      PACKAGE_VERSION=$(cat ${{ inputs.DOCKERFILE_PATH }}/package.json | jq '.version' | tr -d '"')
       echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
     shell: bash
 
@@ -109,14 +113,14 @@ runs:
     id: tester
     uses: docker/build-push-action@v3
     with:
-      context: .
-      file: ./Dockerfile
+      context: ${{ inputs.DOCKERFILE_PATH }}
+      file: ${{ inputs.DOCKERFILE_PATH }}/Dockerfile
       push: true
       target: tester
       platforms: linux/amd64
       tags: ghcr.io/${{ github.repository }}:tester
-      cache-from: type=local,src=/tmp/actions-runner
-      cache-to: type=local,dest=/tmp/actions-runner,mode=max
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
       build-args: |
         PAT=${{ inputs.PAT }}
 
@@ -137,14 +141,14 @@ runs:
     if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
-      context: .
-      file: ./Dockerfile
+      context: ${{ inputs.DOCKERFILE_PATH }}
+      file: ${{ inputs.DOCKERFILE_PATH }}/Dockerfile
       push: true
       target: devRunner
       platforms: linux/amd64
       tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
-      cache-from: type=local,src=/tmp/actions-runner
-      cache-to: type=local,dest=/tmp/actions-runner,mode=max
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
       build-args: |
         PAT=${{ inputs.PAT }}
 
@@ -152,14 +156,14 @@ runs:
     if: ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
     uses: docker/build-push-action@v3
     with:
-      context: .
-      file: ./Dockerfile
+      context: ${{ inputs.DOCKERFILE_PATH }}
+      file: ${{ inputs.DOCKERFILE_PATH }}/Dockerfile
       push: true
       target: runner
       platforms: linux/amd64
       tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
-      cache-from: type=local,src=/tmp/actions-runner
-      cache-to: type=local,dest=/tmp/actions-runner,mode=max
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
       build-args: |
         PAT=${{ inputs.PAT }}
 

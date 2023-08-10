@@ -19,27 +19,32 @@ build:
     steps:
     - name: build and push action
       id: build-action
-      uses: entrecode/action.build@latest
+      uses: entrecode/action.build@latest # @v6 if you want to use the DOCKERFILE_PATH
       with:
+        PAT: ${{ secrets.PAT }}
         NAMESPACE: ${{ vars.NAMESPACE }}
         NAME: ${{ vars.NAME }}
-        PAT: ${{ secrets.PAT }}
-        ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }} # optional when false
-        LOCAL_TESTING_SECRET: ${{ secrets.LOCAL_TESTING_SECRET }} # optional when no local-testing.yaml is needed for running tests
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }}
+        LOCAL_TESTING_SECRET: ${{ secrets.LOCAL_TESTING_SECRET }}
+        ACTIVATE_DEV_RUNNER: ${{ vars.ACTIVATE_DEV_RUNNER }}
+        DOCKERFILE_PATH: ${{ vars.DOCKERFILE_PATH }} # only available in v6 until now
 ```
 
 ## inputs
 
-All inputs are requried to run the action
 
-| Name                    | Type        | Description                                                                                 |
-|-------------------------|-------------|---------------------------------------------------------------------------------------------|
-| `PAT`                   | String      | Personal Access Token as GitHub secret                                                      |
-| `NAMESPACE`             | String      | Namespace of the project                                                                    |
-| `NAME`                  | String      | Name of the project                                                                         |
-| `ACTION_ENABLE_TESTING` | String      | if set to `true`, target `tester` in Dockerfile exist and testing will be enabeled          |
-| `LOCAL_TESTING_SECRET`  | yaml-format | containes local-testing.yaml secrets, necessary if secrets are needed for running the tests |
+| Name                    | Type        | Description                                                                                 | Required  | Version      |
+|-------------------------|-------------|---------------------------------------------------------------------------------------------|-----------|--------------|
+| `PAT`                   | String      | Personal Access Token as GitHub secret                                                      | Yes       | latest (v4)  |
+| `NAMESPACE`             | String      | Namespace of the project                                                                    | Yes       | latest (v4)  |
+| `NAME`                  | String      | Name of the project                                                                         | Yes       | latest (v4)  |
+| `GITHUB_TOKEN`          | String      | GITHUB_TOKEN for authentication                                                             | Yes       | latest (v4)  |
+| `ACTION_ENABLE_TESTING` | String      | if set to `true`, target `tester` in Dockerfile exist and testing will be enabeled          | No        | latest (v4)  |
+| `LOCAL_TESTING_SECRET`  | yaml-format | containes local-testing.yaml secrets, necessary if secrets are needed for running the tests | No        | latest (v4)  |
+| `ACTIVATE_DEV_RUNNER`   | String      | if set to `true`, container with target `devRunner` in Dockerfile will be created           | No        | latest (v4)  |
+| `DOCKERFILE_PATH`       | String      | Path where Dockerfile is located, e.g. `./apps/app1`, default is `.`                        | No        | (v6)         |
 
 
-`PAT` and `LOCAL_TESTING_SECRET` are defined in GitHub as Action-Secrets.
-`NAMESPACE`, `NAME` and `ACTION_ENABLE_TESTING` are defined in GitHub as Action-Variables.
+`PAT` and `LOCAL_TESTING_SECRET` can be set in GitHub as Action-Secrets.
+`NAMESPACE`, `NAME`, `ACTION_ENABLE_TESTING`, `ACTIVATE_DEV_RUNNER` and `DOCKERFILE_PATH` can be set in GitHub as Action-Variables.
