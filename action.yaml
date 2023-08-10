@@ -145,7 +145,7 @@ runs:
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
-      file: ./Dockerfile
+      file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
       push: true
       target: devRunner
       platforms: linux/amd64
@@ -160,7 +160,7 @@ runs:
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
-      file: ./Dockerfile
+      file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
       push: true
       target: runner
       platforms: linux/amd64
