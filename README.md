@@ -19,7 +19,7 @@ build:
     steps:
     - name: build and push action
       id: build-action
-      uses: entrecode/action.build@latest # @v6 if you want to use the DOCKERFILE_PATH
+      uses: entrecode/action.build@latest # @v6 if you want to use the WORKING_DIRECTORY
       with:
         PAT: ${{ secrets.PAT }}
         NAMESPACE: ${{ vars.NAMESPACE }}
@@ -28,7 +28,7 @@ build:
         ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }}
         LOCAL_TESTING_SECRET: ${{ secrets.LOCAL_TESTING_SECRET }}
         ACTIVATE_DEV_RUNNER: ${{ vars.ACTIVATE_DEV_RUNNER }}
-        DOCKERFILE_PATH: ${{ vars.DOCKERFILE_PATH }} # only available in v6 until now
+        WORKING_DIRECTORY: ${{ vars.WORKING_DIRECTORY }} # only available in v6 until now
 ```
 
 ## inputs
@@ -43,7 +43,7 @@ build:
 | `ACTION_ENABLE_TESTING` | String      | if set to `true`, target `tester` in Dockerfile exist and testing will be enabeled          | No        | latest (v4)  |
 | `LOCAL_TESTING_SECRET`  | yaml-format | containes local-testing.yaml secrets, necessary if secrets are needed for running the tests | No        | latest (v4)  |
 | `ACTIVATE_DEV_RUNNER`   | String      | if set to `true`, container with target `devRunner` in Dockerfile will be created           | No        | latest (v4)  |
-| `DOCKERFILE_PATH`       | String      | Path where Dockerfile is located, e.g. `./apps/app1`, default is `.`                        | No        | (v6)         |
+| `WORKING_DIRECTORY`     | String      | Working directory path, e.g. `./apps/app1`, default is `.`                        | No        | (v6)         |
 
 
 `PAT` and `LOCAL_TESTING_SECRET` can be set in GitHub as Action-Secrets.
