@@ -88,17 +88,22 @@ runs:
       echo "ENV=prod" >> $GITHUB_ENV
     shell: bash
 
-# TODO add WORKING_DIRECTORY
-  - name: Check file existence
-    id: check_files
+  - name: Check file existence (next)
+    id: check_files_next
     uses: andstor/file-existence-action@v2
     with:
-      files: '.env.production, next.config.*'
+      files: '${{ inputs.WORKING_DIRECTORY }}/.env.production, ${{ inputs.WORKING_DIRECTORY }}/next.config.*'
+  
+  - name: Check file existence (astro)
+    id: check_files_astro
+    uses: andstor/file-existence-action@v2
+    with:
+      files: '${{ inputs.WORKING_DIRECTORY }}/.env.production, ${{ inputs.WORKING_DIRECTORY }}/astro.config.mjs'
 
   - name: Remove production environment file on develop for next projects
-    if: github.ref == 'refs/heads/develop' && steps.check_files.outputs.files_exists == 'true'
+    if: github.ref == 'refs/heads/develop' && (steps.check_files.outputs.files_exists_next == 'true' || steps.check_files.outputs.files_exists_astro == 'true')
     run: |
-      rm -f .env.production
+      rm -f ${{ inputs.WORKING_DIRECTORY }}/.env.production
     shell: bash
 
 # TODO add WORKING_DIRECTORY
