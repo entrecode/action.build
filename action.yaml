@@ -100,8 +100,8 @@ runs:
     with:
       files: '${{ inputs.WORKING_DIRECTORY }}/.env.production, ${{ inputs.WORKING_DIRECTORY }}/astro.config.mjs'
 
-  - name: Remove production environment file on develop for next projects
-    if: github.ref == 'refs/heads/develop' && (steps.check_files.outputs.files_exists_next == 'true' || steps.check_files.outputs.files_exists_astro == 'true')
+  - name: Remove production environment file on develop for next/astro projects
+    if: github.ref == 'refs/heads/develop' && (steps.check_files_next.outputs.files_exists == 'true' || steps.check_files_astro.outputs.files_exists == 'true')
     run: |
       rm -f ${{ inputs.WORKING_DIRECTORY }}/.env.production
     shell: bash
