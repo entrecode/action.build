@@ -116,7 +116,7 @@ runs:
 
   - name: Setup database
     if: inputs.TESTING_WITH_DB == 'true'
-    run: psql -h postgres -U postgres -f ${{ inputs.DB_FILEPATH }}
+    run: psql -h localhost -U postgres -f ${{ inputs.DB_FILEPATH }}
     env:
       PGPASSWORD: password
     shell: bash
