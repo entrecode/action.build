@@ -30,6 +30,14 @@ inputs:
     description: 'Working directory of the project'
     required: false
     default: '.'
+  TESTING_WITH_DB:
+    description: 'if set to true, a database will be created and the tests will be executed'
+    required: false
+    default: 'false'
+  DB_FILEPATH:
+    description: 'path to the database file'
+    required: false
+    default: '.'
 
 outputs:
   version:
@@ -106,6 +114,13 @@ runs:
       rm -f ${{ inputs.WORKING_DIRECTORY }}/.env.production
     shell: bash
 
+  - name: Setup database
+    if: inputs.TESTING_WITH_DB == 'true'
+    run: psql -h postgres -U postgres -f ${{ inputs.DB_FILEPATH }}
+    env:
+      PGPASSWORD: password
+    shell: bash
+      
 # TODO add WORKING_DIRECTORY
   - name: Write local-testing config file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
@@ -116,7 +131,7 @@ runs:
         ${{ inputs.LOCAL_TESTING_SECRET }}
 
   - name: Set up docker buildx for tester
-    if: inputs.ACTION_ENABLE_TESTING == 'true'
+    if: inputs.ACTION_ENABLE_TESTING == 'true' || inputs.TESTING_WITH_DB == 'true'
     id: tester
     uses: docker/build-push-action@v3
     with:
@@ -125,6 +140,7 @@ runs:
       push: true
       target: tester
       platforms: linux/amd64
+      network: host # ?
       tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
       cache-from: type=gha
       cache-to: type=gha,mode=max
@@ -132,7 +148,7 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Test
-    if: inputs.ACTION_ENABLE_TESTING == 'true' && steps.tester.outcome == 'success'
+    if: (inputs.ACTION_ENABLE_TESTING == 'true' || inputs.TESTING_WITH_DB == 'true') && steps.tester.outcome == 'success'
     id: testrunner
     run: |
       docker run --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
@@ -146,7 +162,7 @@ runs:
     shell: bash
 
   - name: Build and push
-    if: (inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
+    if: (inputs.ACTION_ENABLE_TESTING == 'false' && inputs.TESTING_WITH_DB == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
@@ -161,7 +177,7 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Build and push
-    if: ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
+    if: ((inputs.ACTION_ENABLE_TESTING == 'false' && inputs.TESTING_WITH_DB == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' && inputs.TESTING_WITH_DB == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
