@@ -137,7 +137,7 @@ runs:
     if: inputs.LOCAL_TESTING_SECRET != 'false'
     uses: 'DamianReeves/write-file-action@master'
     with:
-      path: config/local-testing.yaml
+      path: config/local.yaml
       contents: |
         ${{ inputs.LOCAL_TESTING_SECRET }}
 
