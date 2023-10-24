@@ -34,10 +34,14 @@ inputs:
     description: 'if set to true, a database will be created and the tests will be executed'
     required: false
     default: 'false'
-  DB_FILEPATH:
+  DB_CREATE_FILEPATH:
     description: 'path to the database file'
     required: false
     default: '.'
+  DB_TESTDATA_FILEPATH:
+    description: 'path to the testdata file'
+    required: false
+    default: 'false'
 
 outputs:
   version:
@@ -116,7 +120,14 @@ runs:
 
   - name: Setup database
     if: inputs.TESTING_WITH_DB == 'true'
-    run: psql -h localhost -U postgres -f ${{ inputs.DB_FILEPATH }}
+    run: psql -h localhost -U postgres -f ${{ inputs.DB_CREATE_FILEPATH }}
+    env:
+      PGPASSWORD: password
+    shell: bash
+
+  - name: Setup testdata
+    if: inputs.DB_TESTDATA_FILEPATH !== 'false'
+    run: psql -h localhost -U postgres -f ${{ inputs.DB_TESTDATA_FILEPATH }}
     env:
       PGPASSWORD: password
     shell: bash
