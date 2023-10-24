@@ -126,7 +126,7 @@ runs:
     shell: bash
 
   - name: Setup testdata
-    if: inputs.DB_TESTDATA_FILEPATH !== 'false'
+    if: inputs.DB_TESTDATA_FILEPATH != 'false'
     run: psql -h localhost -U postgres -f ${{ inputs.DB_TESTDATA_FILEPATH }}
     env:
       PGPASSWORD: password
