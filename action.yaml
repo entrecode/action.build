@@ -197,7 +197,7 @@ runs:
     shell: bash
 
   - name: Build and push
-    if: (inputs.ACTION_ENABLE_TESTING == 'false' && inputs.TESTING_WITH_DB == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
+    if: ((inputs.ACTION_ENABLE_TESTING == 'false' || inputs.ACTION_ENABLE_TESTING == '') && (inputs.TESTING_WITH_DB == 'false' || inputs.TESTING_WITH_DB == '') || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
@@ -212,7 +212,7 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Build and push
-    if: ((inputs.ACTION_ENABLE_TESTING == 'false' && inputs.TESTING_WITH_DB == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'false') || ((inputs.ACTION_ENABLE_TESTING == 'false' && inputs.TESTING_WITH_DB == 'false' || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
+    if: (((inputs.ACTION_ENABLE_TESTING == 'false' || inputs.ACTION_ENABLE_TESTING == '') && (inputs.TESTING_WITH_DB == 'false' || inputs.TESTING_WITH_DB == '') || steps.testrunner.outcome == 'success') && (inputs.ACTIVATE_DEV_RUNNER == 'false') || inputs.ACTIVATE_DEV_RUNNER == '') || (((inputs.ACTION_ENABLE_TESTING == 'false' || inputs.ACTION_ENABLE_TESTING == '') && (inputs.TESTING_WITH_DB == 'false' || inputs.TESTING_WITH_DB == '') || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
