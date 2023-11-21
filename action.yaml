@@ -186,7 +186,7 @@ runs:
     if: (inputs.ACTION_ENABLE_TESTING == 'true' || inputs.TESTING_WITH_DB == 'true') && steps.tester.outcome == 'success'
     id: testrunner
     run: |
-      docker run --network="host" --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
+      docker run --pull always --network="host" --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
     shell: bash
 
 # TODO add WORKING_DIRECTORY
