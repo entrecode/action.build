@@ -65,9 +65,9 @@ build:
 | `LOCAL_TESTING_SECRET`  | yaml-format | containes local-testing.yaml secrets, necessary if secrets are needed for running the tests | No        | latest (v4)  |
 | `ACTIVATE_DEV_RUNNER`   | String      | if set to `true`, container with target `devRunner` in Dockerfile will be created           | No        | latest (v4)  |
 | `WORKING_DIRECTORY`     | String      | Working directory path, e.g. `./apps/app1`, default is `.`                                  | No        | (v6)         |
-| `TESTING_WITH_DB`       | String      | if set to `true`, target `tester` in Dockerfile exist and test will run in a Database       | No        | (v9)         |
-| `DB_CREATE_FILEPATH`    | String      | Path where the `create.sql` is located, e.g. `lib/db/create.sql`, default is `.`            | No        | (v9)         |
-| `DB_TESTDATA_FILEPATH`  | String      | Path where the `testdata.sql` is located, e.g. `lib/db/testdata.sql`, default is `.`        | No        | (v9)         |
+| `TESTING_WITH_DB`       | String      | if set to `true`, target `tester` in Dockerfile exist and test will run in a Database       | No        | (v10)         |
+| `DB_CREATE_FILEPATH`    | String      | Path where the `create.sql` is located, e.g. `lib/db/create.sql`, default is `.`            | No        | (v10)         |
+| `DB_TESTDATA_FILEPATH`  | String      | Path where the `testdata.sql` is located, e.g. `lib/db/testdata.sql`, default is `.`        | No        | (v10)         |
 
 
 
