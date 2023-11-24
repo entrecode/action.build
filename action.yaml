@@ -193,7 +193,7 @@ runs:
   - name: Remove local testing file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
     run: |
-      rm -f config/local-testing.yaml
+      rm -f config/local.yaml
     shell: bash
 
   - name: Build and push
