@@ -42,6 +42,10 @@ inputs:
     description: 'path to the testdata file'
     required: false
     default: 'false'
+  DB_PORT:
+    description: 'port of the database'
+    required: false
+    default: '5432'
 
 outputs:
   version:
@@ -123,11 +127,11 @@ runs:
     run: |
       if command -v docker &> /dev/null
       then
-          cat ${{ inputs.DB_CREATE_FILEPATH }} | docker run -e PGPASSWORD=$PGPASSWORD --network host --rm -i postgres psql -h localhost -U postgres
+          cat ${{ inputs.DB_CREATE_FILEPATH }} | docker run -e PGPASSWORD=$PGPASSWORD --network host --rm -i postgres psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
       else
           if command -v psql &> /dev/null
           then
-              cat ${{ inputs.DB_CREATE_FILEPATH }} | psql -h localhost -U postgres
+              cat ${{ inputs.DB_CREATE_FILEPATH }} | psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
           else
               echo "Neither docker nor psql is installed. Please install one of them."
               exit 1
@@ -142,11 +146,11 @@ runs:
     run: |
       if command -v docker &> /dev/null
       then
-          cat ${{ inputs.DB_TESTDATA_FILEPATH }} | docker run -e PGPASSWORD=$PGPASSWORD --network host --rm -i postgres psql -h localhost -U postgres
+          cat ${{ inputs.DB_TESTDATA_FILEPATH }} | docker run -e PGPASSWORD=$PGPASSWORD --network host --rm -i postgres psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
       else
           if command -v psql &> /dev/null
           then
-              cat ${{ inputs.DB_TESTDATA_FILEPATH }} | psql -h localhost -U postgres
+              cat ${{ inputs.DB_TESTDATA_FILEPATH }} | psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
           else
               echo "Neither docker nor psql is installed. Please install one of them."
               exit 1
