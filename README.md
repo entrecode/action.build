@@ -24,7 +24,7 @@ build:
         env:
           POSTGRES_PASSWORD: password
         ports:
-          - 5432:5432
+          - 5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -49,6 +49,7 @@ build:
         TESTING_WITH_DB: ${{ vars.TESTING_WITH_DB }}  # Testing with DB
         DB_CREATE_FILEPATH: ${{ vars.DB_CREATE_FILEPATH }}  
         DB_TESTDATA_FILEPATH: ${{ vars.DB_TESTDATA_FILEPATH }}
+        DB_PORT: ${{ job.services.postgres.ports['5432'] }}
 
 ```
 
@@ -65,13 +66,14 @@ build:
 | `LOCAL_TESTING_SECRET`  | yaml-format | containes local-testing.yaml secrets, necessary if secrets are needed for running the tests | No        | latest (v4)  |
 | `ACTIVATE_DEV_RUNNER`   | String      | if set to `true`, container with target `devRunner` in Dockerfile will be created           | No        | latest (v4)  |
 | `WORKING_DIRECTORY`     | String      | Working directory path, e.g. `./apps/app1`, default is `.`                                  | No        | (v6)         |
-| `TESTING_WITH_DB`       | String      | if set to `true`, target `tester` in Dockerfile exist and test will run in a Database       | No        | (v10)         |
-| `DB_CREATE_FILEPATH`    | String      | Path where the `create.sql` is located, e.g. `lib/db/create.sql`, default is `.`            | No        | (v10)         |
-| `DB_TESTDATA_FILEPATH`  | String      | Path where the `testdata.sql` is located, e.g. `lib/db/testdata.sql`, default is `.`        | No        | (v10)         |
+| `TESTING_WITH_DB`       | String      | if set to `true`, target `tester` in Dockerfile exist and test will run in a Database       | No        | (v10)        |
+| `DB_CREATE_FILEPATH`    | String      | Path where the `create.sql` is located, e.g. `lib/db/create.sql`, default is `.`            | No        | (v10)        |
+| `DB_TESTDATA_FILEPATH`  | String      | Path where the `testdata.sql` is located, e.g. `lib/db/testdata.sql`, default is `.`        | No        | (v10)        |
+| `DB_PORT`               | String      | Random generated database port to avoid port collision in stage and production action       | No        | (v11)        |
 
 
 
 `PAT` and `LOCAL_TESTING_SECRET` can be set in GitHub as Action-Secrets.
 `NAMESPACE`, `NAME`, `ACTION_ENABLE_TESTING`, `ACTIVATE_DEV_RUNNER`, `WORKING_DIRECTORY`, `TESTING_WITH_DB`, `DB_CREATE_FILEPATH` and `DB_TESTDATA_FILEPATH` can be set in GitHub as Action-Variables.
 
-If you want to enable testing only one of `ACTION_ENABLE_TESTING` or `TESTING_WITH_DB` is necessary. Do not set both to `true`. If you enable the `TESTING_WITH_DB` you have to provide the `DB_CREATE_FILEPATH` and `DB_TESTDATA_FILEPATH` as well.
+If you want to enable testing only one of `ACTION_ENABLE_TESTING` or `TESTING_WITH_DB` is necessary. Do not set both to `true`. If you enable the `TESTING_WITH_DB` you have to provide the `DB_CREATE_FILEPATH`, `DB_TESTDATA_FILEPATH` and `DB_PORT` as well. `DB_PORT` is necessary to avoid a port collision when the action for stage and production run in parallel.
