@@ -161,7 +161,7 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Build and push
-    if: (inputs.ACTIVATE_DEV_RUNNER == 'false') || inputs.ACTIVATE_DEV_RUNNER == '') || github.ref != 'refs/heads/develop')
+    if: inputs.ACTIVATE_DEV_RUNNER == 'false' || inputs.ACTIVATE_DEV_RUNNER == '' || github.ref != 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
