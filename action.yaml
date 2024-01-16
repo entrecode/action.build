@@ -30,22 +30,6 @@ inputs:
     description: 'Working directory of the project'
     required: false
     default: '.'
-  TESTING_WITH_DB:
-    description: 'if set to true, a database will be created and the tests will be executed'
-    required: false
-    default: 'false'
-  DB_CREATE_FILEPATH:
-    description: 'path to the database file'
-    required: false
-    default: '.'
-  DB_TESTDATA_FILEPATH:
-    description: 'path to the testdata file'
-    required: false
-    default: 'false'
-  DB_PORT:
-    description: 'port of the database'
-    required: false
-    default: '5432'
 
 outputs:
   version:
@@ -78,10 +62,6 @@ runs:
 
   - name: Set up Docker Buildx
     uses: docker/setup-buildx-action@v2
-
-  # - name: get-npm-version
-  #   id: package-version
-  #   uses: martinbeentjes/npm-get-version-action@main
 
   - name: get-npm-version
     id: package-version
@@ -121,56 +101,17 @@ runs:
     run: |
       rm -f ${{ inputs.WORKING_DIRECTORY }}/.env.production
     shell: bash
-
-  - name: Setup database
-    if: inputs.TESTING_WITH_DB == 'true'
-    run: |
-      if command -v docker &> /dev/null
-      then
-          cat ${{ inputs.DB_CREATE_FILEPATH }} | docker run -e PGPASSWORD=$PGPASSWORD --network host --rm -i postgres psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
-      else
-          if command -v psql &> /dev/null
-          then
-              cat ${{ inputs.DB_CREATE_FILEPATH }} | psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
-          else
-              echo "Neither docker nor psql is installed. Please install one of them."
-              exit 1
-          fi
-      fi
-    env:
-      PGPASSWORD: password
-    shell: bash
-
-  - name: Setup testdata
-    if: inputs.TESTING_WITH_DB == 'true' && inputs.DB_TESTDATA_FILEPATH != 'false'
-    run: |
-      if command -v docker &> /dev/null
-      then
-          cat ${{ inputs.DB_TESTDATA_FILEPATH }} | docker run -e PGPASSWORD=$PGPASSWORD --network host --rm -i postgres psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
-      else
-          if command -v psql &> /dev/null
-          then
-              cat ${{ inputs.DB_TESTDATA_FILEPATH }} | psql -h localhost -U postgres -p ${{ inputs.DB_PORT }}
-          else
-              echo "Neither docker nor psql is installed. Please install one of them."
-              exit 1
-          fi
-      fi
-    env:
-      PGPASSWORD: password
-    shell: bash
       
-# TODO add WORKING_DIRECTORY
   - name: Write local-testing config file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
     uses: 'DamianReeves/write-file-action@master'
     with:
-      path: config/local.yaml
+      path: ${{ inputs.WORKING_DIRECTORY }}/config/local.yaml
       contents: |
         ${{ inputs.LOCAL_TESTING_SECRET }}
 
   - name: Set up docker buildx for tester
-    if: inputs.ACTION_ENABLE_TESTING == 'true' || inputs.TESTING_WITH_DB == 'true'
+    if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: tester
     uses: docker/build-push-action@v3
     with:
@@ -187,21 +128,25 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Test
-    if: (inputs.ACTION_ENABLE_TESTING == 'true' || inputs.TESTING_WITH_DB == 'true') && steps.tester.outcome == 'success'
+    if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: testrunner
     run: |
       docker run --pull always --network="host" --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
     shell: bash
 
-# TODO add WORKING_DIRECTORY
+  - name: Fail if test failed
+    if: inputs.ACTION_ENABLE_TESTING == 'true' && steps.testrunner.outcome != 'success'
+    run: core.setFailed('Tests failed') && exit 1
+    shell: bash
+
   - name: Remove local testing file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
     run: |
-      rm -f config/local.yaml
+      rm -f ${{ inputs.WORKING_DIRECTORY }}/config/local.yaml
     shell: bash
 
   - name: Build and push
-    if: ((inputs.ACTION_ENABLE_TESTING == 'false' || inputs.ACTION_ENABLE_TESTING == '') && (inputs.TESTING_WITH_DB == 'false' || inputs.TESTING_WITH_DB == '') || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
+    if: inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
@@ -216,7 +161,7 @@ runs:
         PAT=${{ inputs.PAT }}
 
   - name: Build and push
-    if: (((inputs.ACTION_ENABLE_TESTING == 'false' || inputs.ACTION_ENABLE_TESTING == '') && (inputs.TESTING_WITH_DB == 'false' || inputs.TESTING_WITH_DB == '') || steps.testrunner.outcome == 'success') && (inputs.ACTIVATE_DEV_RUNNER == 'false') || inputs.ACTIVATE_DEV_RUNNER == '') || (((inputs.ACTION_ENABLE_TESTING == 'false' || inputs.ACTION_ENABLE_TESTING == '') && (inputs.TESTING_WITH_DB == 'false' || inputs.TESTING_WITH_DB == '') || steps.testrunner.outcome == 'success') && inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref != 'refs/heads/develop')
+    if: (inputs.ACTIVATE_DEV_RUNNER == 'false') || inputs.ACTIVATE_DEV_RUNNER == '') || github.ref != 'refs/heads/develop')
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
