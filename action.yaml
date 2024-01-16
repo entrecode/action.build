@@ -30,7 +30,7 @@ inputs:
     description: 'Working directory of the project'
     required: false
     default: '.'
-  DB_PORT:
+  DBPORT:
     description: 'port of the database'
     required: false
     default: '5432'
@@ -119,7 +119,7 @@ runs:
     id: tester
     uses: docker/build-push-action@v3
     env:
-      DB_PORT: ${{ inputs.DB_PORT }}
+      DBPORT: ${{ inputs.DBPORT }}
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
       file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
