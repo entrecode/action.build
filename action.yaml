@@ -134,10 +134,8 @@ runs:
   - name: Test
     if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: testrunner
-    env:
-      DBPORT: ${{ inputs.DBPORT }}
     run: |
-      docker run --pull always --network="host" --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
+      docker run --pull always --network="host" --rm -e DBPORT=${{ inputs.DBPORT }} ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
     shell: bash
 
   - name: Fail if test failed
