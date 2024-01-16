@@ -118,8 +118,6 @@ runs:
     if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: tester
     uses: docker/build-push-action@v3
-    env:
-      DBPORT: ${{ inputs.DBPORT }}
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
       file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
@@ -136,6 +134,8 @@ runs:
   - name: Test
     if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: testrunner
+    env:
+      DBPORT: ${{ inputs.DBPORT }}
     run: |
       docker run --pull always --network="host" --rm ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
     shell: bash
