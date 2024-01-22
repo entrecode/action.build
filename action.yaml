@@ -58,7 +58,7 @@ runs:
     shell: bash
 
   - name: Login to Github Registry
-    uses: 
+    uses: docker/login-action@v2 
     
     with:
       registry: ghcr.io
