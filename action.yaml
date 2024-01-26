@@ -92,13 +92,13 @@ runs:
 
   - name: Check file existence (next)
     id: check_files_next
-    uses: andstor/file-existence-action@v2
+    uses: kawon7317/file-existence-action@v2
     with:
       files: '${{ inputs.WORKING_DIRECTORY }}/.env.production, ${{ inputs.WORKING_DIRECTORY }}/next.config.*'
   
   - name: Check file existence (astro)
     id: check_files_astro
-    uses: andstor/file-existence-action@v2
+    uses: kawon7317/file-existence-action@v2
     with:
       files: '${{ inputs.WORKING_DIRECTORY }}/.env.production, ${{ inputs.WORKING_DIRECTORY }}/astro.config.mjs'
 
