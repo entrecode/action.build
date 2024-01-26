@@ -47,7 +47,7 @@ runs:
   using: 'composite'
   steps:
   - name: Checkout code
-    uses: actions/checkout@v3
+    uses: actions/checkout@v4
 
   - name: Check COPY . . in Dockerfile
     run: |
@@ -58,7 +58,7 @@ runs:
     shell: bash
 
   - name: Login to Github Registry
-    uses: docker/login-action@v2 
+    uses: docker/login-action@v3
     
     with:
       registry: ghcr.io
@@ -67,7 +67,7 @@ runs:
       logout: false
 
   - name: Set up Docker Buildx
-    uses: docker/setup-buildx-action@v2
+    uses: docker/setup-buildx-action@v3
 
   - name: get-npm-version
     id: package-version
@@ -110,7 +110,7 @@ runs:
       
   - name: Write local-testing config file
     if: inputs.LOCAL_TESTING_SECRET != 'false'
-    uses: 'DamianReeves/write-file-action@master'
+    uses: DamianReeves/write-file-action@master # TODO replace
     with:
       path: ${{ inputs.WORKING_DIRECTORY }}/config/local.yaml
       contents: |
@@ -119,7 +119,7 @@ runs:
   - name: Set up docker buildx for tester
     if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: tester
-    uses: docker/build-push-action@v3
+    uses: docker/build-push-action@v5
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
       file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
@@ -168,7 +168,7 @@ runs:
 
   - name: Build and push
     if: inputs.ACTIVATE_DEV_RUNNER == 'false' || inputs.ACTIVATE_DEV_RUNNER == '' || github.ref != 'refs/heads/develop'
-    uses: docker/build-push-action@v3
+    uses: docker/build-push-action@v5
     with:
       context: ${{ inputs.WORKING_DIRECTORY }}
       file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
