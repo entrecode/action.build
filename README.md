@@ -45,8 +45,7 @@ build:
         LOCAL_TESTING_SECRET: ${{ secrets.LOCAL_TESTING_SECRET }}
         ACTIVATE_DEV_RUNNER: ${{ vars.ACTIVATE_DEV_RUNNER }}
         WORKING_DIRECTORY: ${{ vars.WORKING_DIRECTORY }} # only available in v6 until now
-        # inputs below only in v10 available, necessary if tests need a Database to be executed - in combination with the services from above
-        TESTING_WITH_DB: ${{ vars.TESTING_WITH_DB }}  # Testing with DB
+        # necessary if tests need a Database to be executed - in combination with the services from above
         DBPORT: ${{ job.services.postgres.ports['5432'] }}
 
 ```
