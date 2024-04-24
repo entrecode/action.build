@@ -41,10 +41,12 @@ build:
         NAMESPACE: ${{ vars.NAMESPACE }}
         NAME: ${{ vars.NAME }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }} # Testing without DB
+        ACTION_ENABLE_TESTING: ${{ vars.ACTION_ENABLE_TESTING }}
         LOCAL_TESTING_SECRET: ${{ secrets.LOCAL_TESTING_SECRET }}
         ACTIVATE_DEV_RUNNER: ${{ vars.ACTIVATE_DEV_RUNNER }}
         WORKING_DIRECTORY: ${{ vars.WORKING_DIRECTORY }} # only available in v6 until now
+        # necessary if tests need a Database to be executed - in combination with the services from above
+        DBPORT: ${{ job.services.postgres.ports['5432'] }}
 
 ```
 
