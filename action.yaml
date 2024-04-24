@@ -128,8 +128,10 @@ runs:
       platforms: linux/amd64
       network: host # ?
       tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester
-      cache-from: type=gha
-      cache-to: type=gha,mode=max
+      #cache-from: type=gha
+      #cache-to: type=gha,mode=max
+      cache-from: type=local,src=/tmp/.buildx-cache
+      cache-to: type=local,dest=/tmp/.buildx-cache
       build-args: |
         PAT=${{ inputs.PAT }}
 
@@ -161,8 +163,10 @@ runs:
       target: devRunner
       platforms: linux/amd64
       tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
-      cache-from: type=gha
-      cache-to: type=gha,mode=max
+      #cache-from: type=gha
+      #cache-to: type=gha,mode=max
+      cache-from: type=local,src=/tmp/.buildx-cache
+      cache-to: type=local,dest=/tmp/.buildx-cache
       build-args: |
         PAT=${{ inputs.PAT }}
 
@@ -176,8 +180,10 @@ runs:
       target: runner
       platforms: linux/amd64
       tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
-      cache-from: type=gha
-      cache-to: type=gha,mode=max
+      #cache-from: type=gha
+      #cache-to: type=gha,mode=max
+      cache-from: type=local,src=/tmp/.buildx-cache
+      cache-to: type=local,dest=/tmp/.buildx-cache
       build-args: |
         PAT=${{ inputs.PAT }}
 
