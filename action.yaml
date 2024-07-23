@@ -130,7 +130,7 @@ runs:
     uses: docker/build-push-action@v5
     with:
       context: ${{ inputs.DOCKER_CONTEXT }}
-      file: ${{ .inputs.DOCKERFILE }}
+      file: ${{ inputs.DOCKERFILE }}
       push: true
       target: tester
       platforms: linux/amd64
@@ -166,7 +166,7 @@ runs:
     uses: docker/build-push-action@v3
     with:
       context: ${{ inputs.DOCKER_CONTEXT }}
-      file: ${{ .inputs.DOCKERFILE }}
+      file: ${{ inputs.DOCKERFILE }}
       push: true
       target: devRunner
       platforms: linux/amd64
@@ -183,7 +183,7 @@ runs:
     uses: docker/build-push-action@v5
     with:
       context: ${{ inputs.DOCKER_CONTEXT }}
-      file: ${{ .inputs.DOCKERFILE }}
+      file: ${{ inputs.DOCKERFILE }}
       push: true
       target: runner
       platforms: linux/amd64
