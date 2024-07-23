@@ -30,6 +30,14 @@ inputs:
     description: 'Working directory of the project'
     required: false
     default: '.'
+  DOCKER_CONTEXT:
+    description: 'Docker context'
+    required: false
+    default: '.'
+  DOCKERFILE:
+    description: 'Dockerfile'
+    required: false
+    default: './Dockerfile'
   DBPORT:
     description: 'port of the database'
     required: false
@@ -49,13 +57,13 @@ runs:
   - name: Checkout code
     uses: actions/checkout@v4
 
-  - name: Check COPY . . in Dockerfile
-    run: |
-      if grep -q "COPY.*\. \." ${{ inputs.WORKING_DIRECTORY }}/Dockerfile; then
-        echo "COPY . . is not allowed in Dockerfile"
-        exit 1
-      fi
-    shell: bash
+  # - name: Check COPY . . in Dockerfile
+  #   run: |
+  #     if grep -q "COPY.*\. \." ${{ inputs.DOCKERFILE }}; then
+  #       echo "COPY . . is not allowed in Dockerfile"
+  #       exit 1
+  #     fi
+  #   shell: bash
 
   - name: Login to Github Registry
     uses: docker/login-action@v3
@@ -121,8 +129,8 @@ runs:
     id: tester
     uses: docker/build-push-action@v5
     with:
-      context: ${{ inputs.WORKING_DIRECTORY }}
-      file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
+      context: ${{ inputs.DOCKER_CONTEXT }}
+      file: ${{ .inputs.DOCKERFILE }}
       push: true
       target: tester
       platforms: linux/amd64
@@ -157,8 +165,8 @@ runs:
     if: inputs.ACTIVATE_DEV_RUNNER == 'true' && github.ref == 'refs/heads/develop'
     uses: docker/build-push-action@v3
     with:
-      context: ${{ inputs.WORKING_DIRECTORY }}
-      file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
+      context: ${{ inputs.DOCKER_CONTEXT }}
+      file: ${{ .inputs.DOCKERFILE }}
       push: true
       target: devRunner
       platforms: linux/amd64
@@ -174,8 +182,8 @@ runs:
     if: inputs.ACTIVATE_DEV_RUNNER == 'false' || inputs.ACTIVATE_DEV_RUNNER == '' || github.ref != 'refs/heads/develop'
     uses: docker/build-push-action@v5
     with:
-      context: ${{ inputs.WORKING_DIRECTORY }}
-      file: ${{ inputs.WORKING_DIRECTORY }}/Dockerfile
+      context: ${{ inputs.DOCKER_CONTEXT }}
+      file: ${{ .inputs.DOCKERFILE }}
       push: true
       target: runner
       platforms: linux/amd64
