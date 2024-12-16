@@ -90,8 +90,15 @@ runs:
       echo "ENV=stage" >> $GITHUB_ENV
     shell: bash
 
+  - name: Build Container name for staging
+    if: startsWith(github.ref, 'refs/heads/release/')
+    run: |
+      echo "IMAGE_TAG=staging" >> $GITHUB_ENV
+      echo "ENV=stage" >> $GITHUB_ENV
+    shell: bash
+
   - name: Build Container name for master
-    if: github.ref != 'refs/heads/develop'
+    if: github.ref != 'refs/heads/develop' and !startsWith(github.ref, 'refs/heads/release/')
     run: |
       echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
       echo "ENV=prod" >> $GITHUB_ENV
