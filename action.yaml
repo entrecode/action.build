@@ -98,7 +98,7 @@ runs:
     shell: bash
 
   - name: Build Container name for master
-    if: github.ref != 'refs/heads/develop' and !startsWith(github.ref, 'refs/heads/release/')
+    if: github.ref != 'refs/heads/develop' && !startsWith(github.ref, 'refs/heads/release/')
     run: |
       echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
       echo "ENV=prod" >> $GITHUB_ENV
