@@ -42,6 +42,10 @@ inputs:
     description: 'port of the database'
     required: false
     default: '5432'
+  BUILD_DEV:
+    description: 'if set to true, dev container will be created'
+    required: false
+    default: 'false'
 
 outputs:
   version:
@@ -84,7 +88,7 @@ runs:
     shell: bash
 
   - name: Build Container name for develop
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || inputs.BUILD_DEV == 'true'
     run: |
       echo "IMAGE_TAG=dev" >> $GITHUB_ENV
       echo "ENV=stage" >> $GITHUB_ENV
@@ -98,7 +102,7 @@ runs:
     shell: bash
 
   - name: Build Container name for master
-    if: github.ref != 'refs/heads/develop' && !startsWith(github.ref, 'refs/heads/release/')
+    if: github.ref != 'refs/heads/develop' && !startsWith(github.ref, 'refs/heads/release/') && inputs.BUILD_DEV != 'true'
     run: |
       echo "IMAGE_TAG=${{ steps.package-version.outputs.current-version}}" >> $GITHUB_ENV
       echo "ENV=prod" >> $GITHUB_ENV
