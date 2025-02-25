@@ -1,6 +1,6 @@
 # action.build
 
-GitHub composite Action to build and push image to ghcr
+GitHub composite Action to build and push image to ghcr. Newest version: v17, latest tag = v15
 
 ## example
 
@@ -62,8 +62,11 @@ build:
 | `ACTION_ENABLE_TESTING` | String      | if set to `true`, target `tester` in Dockerfile exist and testing will be enabeled          | No        | latest (v4)  |
 | `LOCAL_TESTING_SECRET`  | yaml-format | containes local-testing.yaml secrets, necessary if secrets are needed for running the tests | No        | latest (v4)  |
 | `ACTIVATE_DEV_RUNNER`   | String      | if set to `true`, container with target `devRunner` in Dockerfile will be created           | No        | latest (v4)  |
-| `WORKING_DIRECTORY`     | String      | Working directory path, e.g. `./apps/app1`, default is `.`                                  | No        | (v6)         |
-| `DBPORT`               | String      | Random generated database port to avoid port collision in stage and production action       | No        | (v11)        |
+| `WORKING_DIRECTORY`     | String      | Working directory path, e.g. `./apps/app1`, default is `.`                                  | No        | latest (v6)  |
+| `DBPORT`                | String      | Random generated database port to avoid port collision in stage and production action       | No        | latest (v11) |
+| `DOCKERFILE`            | String      | Path to the Dockerfile, default is `Dockerfile`                                             | No        | latest (v15) |
+| `DOCKER_CONTEXT`        | String      | Path to the Docker context, default is `.`                                                  | No        | latest (v15) |
+| `OVERWRITE_BUILD_TASK`  | String      | Overwrite the build task in the Dockerfile, e.g. `build:dev`                                | No        |    (v17)     |
 
 
 
