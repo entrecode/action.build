@@ -101,7 +101,7 @@ runs:
     shell: bash
 
   - name: Build Container name for develop
-    if: startsWith(github.ref, 'refs/tags/') != true && startsWith(github.ref, 'refs/heads/') != true
+    if: startsWith(github.ref, 'refs/tags/') != true && startsWith(github.ref, 'refs/heads/release/') != true
     run: |
       echo "IMAGE_TAG=${{env.BRANCH_NAME }}" >> $GITHUB_ENV
       echo "ENV=stage" >> $GITHUB_ENV
