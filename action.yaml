@@ -158,7 +158,7 @@ runs:
       target: tester
       platforms: linux/amd64
       network: host # ?
-      tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-{{ env.BUILD_TASK }}
+      tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}
       #cache-from: type=gha
       #cache-to: type=gha,mode=max
       cache-from: type=local,src=/tmp/.buildx-cache
