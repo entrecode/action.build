@@ -66,7 +66,7 @@ build:
 | `DBPORT`                | String      | Random generated database port to avoid port collision in stage and production action       | No        | latest (v11) |
 | `DOCKERFILE`            | String      | Path to the Dockerfile, default is `Dockerfile`                                             | No        | latest (v15) |
 | `DOCKER_CONTEXT`        | String      | Path to the Docker context, default is `.`                                                  | No        | latest (v15) |
-| `OVERWRITE_BUILD_TASK`  | String      | Overwrite the build task in the Dockerfile, e.g. `build:dev`                                | No        |    (v17)     |
+| `OVERWRITE_BUILD_TASK`  | String      | Overwrite the build task in the Dockerfile, e.g. `build:dev`                                | No        | latest (v17) |
 
 
 
