@@ -208,8 +208,8 @@ runs:
       cache-to: type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
       build-args: |
         PAT=${{ inputs.PAT }}
-        BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK != 'false' && format('{0}-{1}', inputs.OVERWRITE_BUILD_TASK, env.BUILD_TASK) || env.BUILD_TASK }}
-
+        # BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK != 'false' && format('{0}-{1}', inputs.OVERWRITE_BUILD_TASK, env.BUILD_TASK) || env.BUILD_TASK }}
+        BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK || env.BUILD_TASK }}
 
   - name: Build and push
     if: inputs.ACTIVATE_DEV_RUNNER == 'false' || inputs.ACTIVATE_DEV_RUNNER == '' || github.ref != 'refs/heads/develop'
@@ -227,7 +227,8 @@ runs:
       cache-to: type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
       build-args: |
         PAT=${{ inputs.PAT }}
-        BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK != 'false' && format('{0}-{1}', inputs.OVERWRITE_BUILD_TASK, env.BUILD_TASK) || env.BUILD_TASK }}
+        # BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK != 'false' && format('{0}-{1}', inputs.OVERWRITE_BUILD_TASK, env.BUILD_TASK) || env.BUILD_TASK }}
+        BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK || env.BUILD_TASK }}
 
     # Temp fix
     # https://github.com/docker/build-push-action/issues/252
