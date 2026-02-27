@@ -172,7 +172,7 @@ runs:
     with:
       context: ${{ inputs.DOCKER_CONTEXT }}
       file: ${{ inputs.DOCKERFILE }}
-      push: true
+      load: true
       target: tester
       platforms: linux/amd64
       network: host # ?
@@ -186,7 +186,7 @@ runs:
     if: inputs.ACTION_ENABLE_TESTING == 'true'
     id: testrunner
     run: |
-      docker run --pull always --network="host" --rm -e DBPORT=${{ inputs.DBPORT }} ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}
+      docker run --network="host" --rm -e DBPORT=${{ inputs.DBPORT }} ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}
     shell: bash
 
   - name: Fail if test failed
