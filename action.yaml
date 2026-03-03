@@ -99,7 +99,11 @@ runs:
         else
           REGISTRY="ghcr.io/entrecode"
         fi
-        for TARGET in tester runner; do
+        TARGETS="runner"
+        if [ "${{ inputs.ACTION_ENABLE_TESTING }}" = "true" ]; then
+          TARGETS="tester runner"
+        fi
+        for TARGET in $TARGETS; do
           REF="${REGISTRY}/${CACHE_REF}-${TARGET}"
           echo "CACHE_FROM_${TARGET^^}=type=registry,ref=${REF}" >> $GITHUB_ENV
           echo "CACHE_TO_${TARGET^^}=type=registry,ref=${REF},mode=max" >> $GITHUB_ENV
@@ -211,7 +215,7 @@ runs:
         platforms: linux/amd64
         tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:${{ env.IMAGE_TAG }}
         cache-from: |
-          ${{ env.CACHE_FROM_TESTER }}
+          ${{ inputs.ACTION_ENABLE_TESTING == 'true' && env.CACHE_FROM_TESTER || '' }}
           ${{ env.CACHE_FROM_RUNNER }}
         cache-to: ${{ env.CACHE_TO_RUNNER }}
         build-args: |
