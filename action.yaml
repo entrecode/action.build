@@ -94,20 +94,24 @@ runs:
     - name: Set build cache configuration
       run: |
         CACHE_REF="${{ inputs.NAMESPACE }}.${{ inputs.NAME }}"
-        if [ "${{ runner.environment }}" = "self-hosted" ]; then
-          REGISTRY="localhost:5000/buildcache"
-        else
-          REGISTRY="ghcr.io/entrecode"
-        fi
         TARGETS="runner"
         if [ "${{ inputs.ACTION_ENABLE_TESTING }}" = "true" ]; then
           TARGETS="tester runner"
         fi
-        for TARGET in $TARGETS; do
-          REF="${REGISTRY}/${CACHE_REF}-${TARGET}"
-          echo "CACHE_FROM_${TARGET^^}=type=registry,ref=${REF}" >> $GITHUB_ENV
-          echo "CACHE_TO_${TARGET^^}=type=registry,ref=${REF},mode=max" >> $GITHUB_ENV
-        done
+        if [ "${{ runner.environment }}" = "self-hosted" ]; then
+          REGISTRY="localhost:5000/buildcache"
+          for TARGET in $TARGETS; do
+            REF="${REGISTRY}/${CACHE_REF}-${TARGET}"
+            echo "CACHE_FROM_${TARGET^^}=type=registry,ref=${REF}" >> $GITHUB_ENV
+            echo "CACHE_TO_${TARGET^^}=type=registry,ref=${REF},mode=max" >> $GITHUB_ENV
+          done
+        else
+          for TARGET in $TARGETS; do
+            SCOPE="${CACHE_REF}-${TARGET}"
+            echo "CACHE_FROM_${TARGET^^}=type=gha,scope=${SCOPE}" >> $GITHUB_ENV
+            echo "CACHE_TO_${TARGET^^}=type=gha,mode=max,scope=${SCOPE}" >> $GITHUB_ENV
+          done
+        fi
       shell: bash
 
     - name: get-npm-version
