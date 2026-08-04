@@ -46,7 +46,9 @@ runner_busy() {
   pgrep -f 'Runner.Worker' >/dev/null 2>&1
 }
 
-if runner_busy; then
+# A dry run neither deletes nor stops anything, so it stays available while
+# builds are going on -- that is exactly when someone wants to look.
+if [ "$DRY_RUN" != "1" ] && runner_busy; then
   log "a runner job is active, skipping this cycle"
   exit 0
 fi
