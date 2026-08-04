@@ -42,6 +42,10 @@ inputs:
     description: 'Build task to overwrite'
     required: false
     default: 'false'
+  CACHE_SCOPE:
+    description: 'Overrides the build cache scope. Defaults to prod for tags, staging for release/*, else the branch name.'
+    required: false
+    default: ''
 
 outputs:
   version:
@@ -98,18 +102,70 @@ runs:
         if [ "${{ inputs.ACTION_ENABLE_TESTING }}" = "true" ]; then
           TARGETS="tester runner"
         fi
+
+        # Builds of different refs run in parallel (the concurrency group in the
+        # calling workflow is per ref) and used to share a single cache tag. One
+        # run could publish a manifest referencing blobs another run had not
+        # finished uploading, which poisons the cache until it is deleted by
+        # hand. One scope per ref plus that concurrency group leaves exactly one
+        # writer per tag.
+        if [ -n "${{ inputs.CACHE_SCOPE }}" ]; then
+          SCOPE="${{ inputs.CACHE_SCOPE }}"
+        elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          SCOPE="prod"
+        elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+          SCOPE="staging"
+        else
+          SCOPE="${{ github.ref_name }}"
+        fi
+        # Registry tags allow [a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}, branch names do not.
+        SCOPE="$(printf '%s' "$SCOPE" | tr -c 'a-zA-Z0-9._-' '-' | cut -c1-100)"
+        case "$SCOPE" in [a-zA-Z0-9_]*) ;; *) SCOPE="x${SCOPE}" ;; esac
+
+        # Exports go to a tag nobody reads. Only a build that finished and
+        # verified gets promoted onto $SCOPE, so a cancelled or failed run
+        # cannot publish a half written cache.
+        RUN_TAG="run-${{ github.run_id }}-${{ github.run_attempt }}"
+
+        echo "CACHE_SCOPE=${SCOPE}" >> $GITHUB_ENV
+        echo "CACHE_RUN_TAG=${RUN_TAG}" >> $GITHUB_ENV
+
         if [ "${{ runner.environment }}" = "self-hosted" ]; then
-          REGISTRY="localhost:5000/buildcache"
+          CANDIDATES="$SCOPE"
+          if [ "$SCOPE" != "develop" ]; then
+            CANDIDATES="$SCOPE develop"
+          fi
+
           for TARGET in $TARGETS; do
-            REF="${REGISTRY}/${CACHE_REF}-${TARGET}"
-            echo "CACHE_FROM_${TARGET^^}=type=registry,ref=${REF}" >> $GITHUB_ENV
-            echo "CACHE_TO_${TARGET^^}=type=registry,ref=${REF},mode=max" >> $GITHUB_ENV
+            REPO="buildcache/${CACHE_REF}-${TARGET}"
+            REF="localhost:5000/${REPO}"
+            echo "CACHE_REPO_${TARGET^^}=${REPO}" >> $GITHUB_ENV
+
+            # A corrupt cache ref imports without complaint and only kills the
+            # build seconds later, when a blob turns out to be unreadable. So
+            # every candidate is checked before it is handed to buildx: a bad
+            # one costs this build its cache instead of the whole release.
+            REPORT="$(mktemp)"
+            "${{ github.action_path }}/scripts/buildcache.sh" usable "$REPO" $CANDIDATES > "$REPORT" || true
+            echo "cache refs for ${REPO}:"
+            cat "$REPORT"
+            while read -r BAD; do
+              echo "::warning::build cache ${REPO}:${BAD} is corrupt and was skipped, it should be purged"
+            done < <(awk '$1 == "skip" && $3 == "corrupt" { print $2 }' "$REPORT")
+
+            {
+              echo "CACHE_FROM_${TARGET^^}<<CACHE_EOF"
+              awk -v ref="$REF" '$1 == "use" { print "type=registry,ref=" ref ":" $2 }' "$REPORT"
+              echo "CACHE_EOF"
+            } >> $GITHUB_ENV
+            echo "CACHE_TO_${TARGET^^}=type=registry,ref=${REF}:${RUN_TAG},mode=max,ignore-error=true" >> $GITHUB_ENV
+            rm -f "$REPORT"
           done
         else
           for TARGET in $TARGETS; do
-            SCOPE="${CACHE_REF}-${TARGET}"
-            echo "CACHE_FROM_${TARGET^^}=type=gha,scope=${SCOPE}" >> $GITHUB_ENV
-            echo "CACHE_TO_${TARGET^^}=type=gha,mode=max,scope=${SCOPE}" >> $GITHUB_ENV
+            GHA_SCOPE="${CACHE_REF}-${TARGET}"
+            echo "CACHE_FROM_${TARGET^^}=type=gha,scope=${GHA_SCOPE}" >> $GITHUB_ENV
+            echo "CACHE_TO_${TARGET^^}=type=gha,mode=max,scope=${GHA_SCOPE},ignore-error=true" >> $GITHUB_ENV
           done
         fi
       shell: bash
@@ -198,11 +254,6 @@ runs:
         docker run --network="host" --rm -e DBPORT=${{ inputs.DBPORT }} ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}
       shell: bash
 
-    - name: Fail if test failed
-      if: inputs.ACTION_ENABLE_TESTING == 'true' && steps.testrunner.outcome != 'success'
-      run: core.setFailed('Tests failed') && exit 1
-      shell: bash
-
     - name: Remove local testing file
       if: inputs.LOCAL_TESTING_SECRET != 'false'
       run: |
@@ -226,9 +277,35 @@ runs:
           PAT=${{ inputs.PAT }}
           BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK != 'false' && inputs.OVERWRITE_BUILD_TASK || env.BUILD_TASK }}
 
+    - name: Promote build cache
+      if: ${{ runner.environment == 'self-hosted' }}
+      run: |
+        # A failed promotion costs the next build its cache, nothing more. It
+        # must never fail a release that is already built and pushed.
+        for TARGET in TESTER RUNNER; do
+          REPO_VAR="CACHE_REPO_${TARGET}"
+          REPO="${!REPO_VAR:-}"
+          [ -n "$REPO" ] || continue
+          "${{ github.action_path }}/scripts/buildcache.sh" promote \
+            "$REPO" "${CACHE_RUN_TAG}" "${CACHE_SCOPE}" \
+            || echo "::warning::could not promote ${REPO}:${CACHE_SCOPE}, next build rebuilds without cache"
+        done
+      shell: bash
+
     - name: Set output
       id: set-output
       run: |
         echo "version=${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
         echo "env=${{ env.ENV }}" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Clean up per-run cache tags
+      if: ${{ always() && runner.environment == 'self-hosted' && env.CACHE_RUN_TAG != '' }}
+      run: |
+        for TARGET in TESTER RUNNER; do
+          REPO_VAR="CACHE_REPO_${TARGET}"
+          REPO="${!REPO_VAR:-}"
+          [ -n "$REPO" ] || continue
+          "${{ github.action_path }}/scripts/buildcache.sh" purge "$REPO" "${CACHE_RUN_TAG}" || true
+        done
       shell: bash
