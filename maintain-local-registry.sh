@@ -27,8 +27,9 @@ DRY_RUN="${DRY_RUN:-0}"
 
 # Tags that are never dropped, however old they get.
 PROTECTED_TAGS="${PROTECTED_TAGS:-prod staging develop}"
-# Scope tags of branches nobody builds any more.
-RETENTION_DAYS="${RETENTION_DAYS:-14}"
+# Scope tags of branches nobody builds any more. Kept generous on purpose: a
+# cold build costs ~14 minutes, the cache it saves costs a few hundred MB.
+RETENTION_DAYS="${RETENTION_DAYS:-30}"
 # Per-run tags. The action purges its own, these are leftovers from runs that
 # were killed before their cleanup step.
 RUN_TAG_HOURS="${RUN_TAG_HOURS:-6}"
