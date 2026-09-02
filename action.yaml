@@ -22,6 +22,10 @@ inputs:
     description: 'local-testing.yaml secret'
     required: false
     default: 'false'
+  SENTRY_AUTH_TOKEN:
+    description: 'Sentry auth token, passed as build-arg to the runner build (source-map upload). Empty = no upload.'
+    required: false
+    default: ''
   WORKING_DIRECTORY:
     description: 'Working directory of the project'
     required: false
@@ -276,6 +280,7 @@ runs:
         build-args: |
           PAT=${{ inputs.PAT }}
           BUILD_TASK=${{ inputs.OVERWRITE_BUILD_TASK != 'false' && inputs.OVERWRITE_BUILD_TASK || env.BUILD_TASK }}
+          SENTRY_AUTH_TOKEN=${{ inputs.SENTRY_AUTH_TOKEN }}
 
     - name: Promote build cache
       if: ${{ runner.environment == 'self-hosted' }}
