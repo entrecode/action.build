@@ -20,7 +20,7 @@ build:
     # Services section, only needed if you want to run tests which require a database
     services:
       postgres:
-        image: postgres:11
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: password
         ports:
