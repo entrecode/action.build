@@ -1,6 +1,6 @@
 # action.build
 
-GitHub composite Action to build and push image to ghcr. Newest version: v26, latest tag = v24
+GitHub composite Action to build and push image to ghcr. Newest version: v27, latest tag = v27
 
 ## example
 
