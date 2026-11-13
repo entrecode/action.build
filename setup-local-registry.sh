@@ -9,8 +9,10 @@ REGISTRY_IMAGE="registry:2"
 # Required by maintain-local-registry.sh, which deletes stale tags through the
 # API. Without it every DELETE answers 405 and the cleanup silently does nothing.
 DELETE_ENABLED="REGISTRY_STORAGE_DELETE_ENABLED=true"
-# Cancelled pushes leave partial uploads behind. The default is 168h.
-UPLOAD_PURGING="REGISTRY_STORAGE_MAINTENANCE_UPLOADPURGING_AGE=24h"
+# Cancelled pushes leave partial uploads behind. The default is 168h. The whole
+# block has to be set at once: registry:2 panics on a single
+# REGISTRY_STORAGE_MAINTENANCE_UPLOADPURGING_* variable.
+UPLOAD_PURGING="REGISTRY_STORAGE_MAINTENANCE={uploadpurging: {enabled: true, age: 24h, interval: 24h, dryrun: false}}"
 
 check_drift() {
   local drift=0
@@ -25,7 +27,7 @@ check_drift() {
   local env_var
   for env_var in "${DELETE_ENABLED}" "${UPLOAD_PURGING}"; do
     if ! docker inspect "${REGISTRY_NAME}" \
-         --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q "^${env_var}$"; then
+         --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qxF "${env_var}"; then
       echo "  WARNING: ${env_var} is not set"
       drift=1
     fi
