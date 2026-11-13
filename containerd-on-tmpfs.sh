@@ -18,6 +18,7 @@ BUILDKIT_SIZE="${BUILDKIT_SIZE:-2G}"
 GC_MAX_USED="${GC_MAX_USED:-35GB}"
 GC_MIN_FREE="${GC_MIN_FREE:-15GB}"
 IMAGE_MAX_AGE="${IMAGE_MAX_AGE:-48h}"
+JOB_RESERVE="${JOB_RESERVE:-16G}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DAEMON_JSON="/etc/docker/daemon.json"
@@ -40,6 +41,8 @@ require_idle_root() {
 }
 
 stop_runners() {
+  [ -z "${RUNNERS_STOPPED:-}" ] || return 0
+  RUNNERS_STOPPED=1
   RUNNERS="$(systemctl list-units --type=service --state=running --no-legend --plain 'actions.runner.*' | awk '{print $1}')"
   echo "== stopping runners: ${RUNNERS:-none}"
   for unit in $RUNNERS; do systemctl stop "$unit"; done
@@ -59,7 +62,7 @@ start_docker() {
   return 1
 }
 
-status() {
+do_status() {
   for p in $MOUNT_PATHS; do
     if mountpoint -q "$p"; then
       df -h --output=target,size,used,avail "$p" | tail -1
@@ -72,17 +75,17 @@ status() {
   docker ps --filter name=buildcache-registry --format 'registry: {{.Status}}'
 }
 
-install() {
+do_install() {
   require_idle_root
   command -v jq >/dev/null || { echo "jq is required"; exit 1; }
   docker info --format '{{json .DriverStatus}}' | grep -q 'io.containerd.snapshotter' \
     || { echo "the containerd image store is not active, run migrate-to-containerd-store.sh first"; exit 1; }
   if mountpoint -q /var/lib/containerd; then
-    echo "already on tmpfs"; status; exit 0
+    echo "already on tmpfs"; do_status; exit 0
   fi
   avail_kb=$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)
-  need_kb=$(( $(numfmt --from=iec "$SIZE") / 1024 + 16 * 1024 * 1024 ))
-  [ "$avail_kb" -gt "$need_kb" ] || { echo "not enough free memory for a ${SIZE} tmpfs plus 16G for jobs"; exit 1; }
+  need_kb=$(( ($(numfmt --from=iec "$SIZE") + $(numfmt --from=iec "$JOB_RESERVE")) / 1024 ))
+  [ "$avail_kb" -gt "$need_kb" ] || { echo "not enough free memory for a ${SIZE} tmpfs plus ${JOB_RESERVE} for jobs"; exit 1; }
 
   stop_runners
 
@@ -111,7 +114,7 @@ EOF
 
   echo "== limiting the build cache to ${GC_MAX_USED}, keeping ${GC_MIN_FREE} free"
   [ -f "$DAEMON_JSON" ] || echo '{}' > "$DAEMON_JSON"
-  cp "$DAEMON_JSON" "$DAEMON_BACKUP"
+  [ -f "$DAEMON_BACKUP" ] || cp "$DAEMON_JSON" "$DAEMON_BACKUP"
   jq --arg max "$GC_MAX_USED" --arg free "$GC_MIN_FREE" \
     '.builder.gc = {"enabled": true, "defaultMaxUsedSpace": $max, "defaultMinFreeSpace": $free}' \
     "$DAEMON_BACKUP" > "$DAEMON_JSON"
@@ -157,12 +160,12 @@ EOF
   curl -sf http://localhost:5000/v2/_catalog >/dev/null || { echo "registry is not answering on localhost:5000"; exit 1; }
 
   echo ""
-  status
+  do_status
   echo ""
   echo "done, the image store is in RAM; the first builds pull from the registry cache"
 }
 
-rollback() {
+do_rollback() {
   require_idle_root
   stop_runners
   stop_docker
@@ -172,6 +175,7 @@ rollback() {
     rm -f "$UNIT_DIR/$unit"
   done
   rm -f "$UNIT_DIR/containerd.service.d/tmpfs.conf" "$UNIT_DIR/docker.service.d/tmpfs.conf"
+  rmdir "$UNIT_DIR/containerd.service.d" "$UNIT_DIR/docker.service.d" 2>/dev/null || true
   systemctl disable "$ENSURE_UNIT" 2>/dev/null || true
   rm -f "$UNIT_DIR/$ENSURE_UNIT" "$ENSURE_SCRIPT" "$CRON_FILE"
   [ -f "$DAEMON_BACKUP" ] && mv "$DAEMON_BACKUP" "$DAEMON_JSON"
@@ -179,14 +183,14 @@ rollback() {
   start_docker
   "$REGISTRY_SCRIPT" >/dev/null 2>&1 || "$SCRIPT_DIR/setup-local-registry.sh"
   echo ""
-  status
+  do_status
   echo ""
   echo "done, back on the on-disk image store"
 }
 
 case "${1:-}" in
-  install) install ;;
-  rollback) rollback ;;
-  status) status ;;
+  install) do_install ;;
+  rollback) do_rollback ;;
+  status) do_status ;;
   *) echo "usage: $(basename "$0") {install|rollback|status}" >&2; exit 2 ;;
 esac
