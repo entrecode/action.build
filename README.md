@@ -127,6 +127,17 @@ fallback. Without that store it creates a `docker-container` builder per job as
 before. `migrate-to-containerd-store.sh` switches a runner host, see the comment
 at its top. GitHub-hosted runners are not affected.
 
+## image store in RAM
+
+`containerd-in-zram.sh install` puts the containerd image store and the BuildKit
+state of a self-hosted runner host on ext4 in zram (lz4, 80G logical, 60G RAM
+limit), caps the build cache in `daemon.json` and prunes images older than 48h
+daily. Volumes, including the cache registry, stay on disk; after a reboot the
+store is empty and a oneshot service recreates the registry. `rollback` returns
+to the on-disk store. Not tmpfs: before kernel 6.6 it has no `user.*` xattrs,
+containerd's overlay differ then fails on every layer and its fallback can
+collide with itself.
+
 ## test isolation
 
 If a container publishes `DBPORT` (the job's postgres service), the tester runs
