@@ -181,7 +181,9 @@ do_rollback() {
   [ -f "$DAEMON_BACKUP" ] && mv "$DAEMON_BACKUP" "$DAEMON_JSON"
   systemctl daemon-reload
   start_docker
-  "$REGISTRY_SCRIPT" >/dev/null 2>&1 || "$SCRIPT_DIR/setup-local-registry.sh"
+  # the registry container of the tmpfs phase lost its rootfs with the tmpfs
+  docker rm -f buildcache-registry >/dev/null 2>&1 || true
+  "$SCRIPT_DIR/setup-local-registry.sh"
   echo ""
   do_status
   echo ""
