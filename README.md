@@ -117,3 +117,19 @@ deletes the entire cache every night.
 
 See [RUNBOOK.md](RUNBOOK.md) when a build fails with
 `failed to compute cache key: short read`.
+
+## buildx driver
+
+On a self-hosted runner whose Docker uses the containerd image store the action
+builds with the `docker` driver: layers stay in Docker between jobs, `load` for
+the tester image costs nothing, and the registry cache above is only the
+fallback. Without that store it creates a `docker-container` builder per job as
+before. `migrate-to-containerd-store.sh` switches a runner host, see the comment
+at its top. GitHub-hosted runners are not affected.
+
+## test isolation
+
+If a container publishes `DBPORT` (the job's postgres service), the tester runs
+in that container's network namespace with `DBPORT=5432`. Test runs of several
+jobs on one runner host therefore no longer collide on the app ports. Without
+such a container the tester runs on the host network as before.

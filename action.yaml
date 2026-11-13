@@ -90,7 +90,23 @@ runs:
         password: ${{ inputs.GITHUB_TOKEN }}
         logout: false
 
+    # With the containerd image store the docker driver keeps every layer local
+    # and --load costs nothing, so a self-hosted runner that has it uses it.
+    - name: Choose buildx driver
+      id: driver
+      run: |
+        DRIVER=docker-container
+        if [ "${{ runner.environment }}" = "self-hosted" ] \
+           && docker info --format '{{json .DriverStatus}}' | grep -q 'io.containerd.snapshotter'; then
+          DRIVER=docker
+        fi
+        echo "Using buildx driver ${DRIVER}"
+        echo "driver=${DRIVER}" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Set up Docker Buildx
+      id: buildx-container
+      if: steps.driver.outputs.driver == 'docker-container'
       uses: docker/setup-buildx-action@v4
       with:
         driver-opts: network=host
@@ -98,6 +114,17 @@ runs:
           [registry."localhost:5000"]
             http = true
             insecure = true
+
+    - name: Set up Docker Buildx (docker driver)
+      id: buildx-docker
+      if: steps.driver.outputs.driver == 'docker'
+      uses: docker/setup-buildx-action@v4
+      with:
+        driver: docker
+
+    - name: Remember builder
+      run: echo "BUILDER_NAME=${{ steps.buildx-container.outputs.name || steps.buildx-docker.outputs.name }}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Set build cache configuration
       run: |
@@ -237,12 +264,12 @@ runs:
       id: tester
       uses: docker/build-push-action@v7
       with:
+        builder: ${{ env.BUILDER_NAME }}
         context: ${{ inputs.DOCKER_CONTEXT }}
         file: ${{ inputs.DOCKERFILE }}
         load: true
         target: tester
         platforms: linux/amd64
-        network: host # ?
         tags: ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}
         cache-from: |
           ${{ env.CACHE_FROM_TESTER }}
@@ -254,8 +281,18 @@ runs:
     - name: Test
       if: inputs.ACTION_ENABLE_TESTING == 'true'
       id: testrunner
+      # On the host network two test runs on one runner host collide on the app
+      # ports (EADDRINUSE). Sharing the network namespace of the job's own
+      # postgres service keeps the database on 127.0.0.1 and isolates the ports.
       run: |
-        docker run --network="host" --rm -e DBPORT=${{ inputs.DBPORT }} ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}
+        IMAGE="ghcr.io/entrecode/${{ inputs.NAMESPACE }}.${{ inputs.NAME}}:tester-${{ env.BUILD_TASK }}"
+        DB_CONTAINER="$(docker ps -q --filter "publish=${{ inputs.DBPORT }}" | head -1)"
+        if [ -n "$DB_CONTAINER" ]; then
+          echo "Running tests in the network namespace of service container ${DB_CONTAINER}"
+          docker run --network="container:${DB_CONTAINER}" --rm -e DBPORT=5432 "$IMAGE"
+        else
+          docker run --network="host" --rm -e DBPORT=${{ inputs.DBPORT }} "$IMAGE"
+        fi
       shell: bash
 
     - name: Remove local testing file
@@ -267,6 +304,7 @@ runs:
     - name: Build and push
       uses: docker/build-push-action@v7
       with:
+        builder: ${{ env.BUILDER_NAME }}
         context: ${{ inputs.DOCKER_CONTEXT }}
         file: ${{ inputs.DOCKERFILE }}
         push: true
