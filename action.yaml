@@ -161,7 +161,10 @@ runs:
         echo "CACHE_SCOPE=${SCOPE}" >> $GITHUB_ENV
         echo "CACHE_RUN_TAG=${RUN_TAG}" >> $GITHUB_ENV
 
-        if [ "${{ runner.environment }}" = "self-hosted" ]; then
+        if [ "${{ runner.environment }}" = "self-hosted" ] \
+           && ! curl -sf -m 5 -o /dev/null http://localhost:5000/v2/; then
+          echo "::warning::cache registry on ${RUNNER_NAME} ($(hostname)) is not answering on localhost:5000, building with the local layer store only. Restart it with ensure-buildcache-registry.sh on the host."
+        elif [ "${{ runner.environment }}" = "self-hosted" ]; then
           CANDIDATES="$SCOPE"
           if [ "$SCOPE" != "develop" ]; then
             CANDIDATES="$SCOPE develop"
