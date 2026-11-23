@@ -133,7 +133,8 @@ at its top. GitHub-hosted runners are not affected.
 state of a self-hosted runner host on ext4 in zram (lz4, 80G logical, 60G RAM
 limit), caps the build cache in `daemon.json` and prunes images older than 48h
 daily. Volumes, including the cache registry, stay on disk; after a reboot the
-store is empty and a oneshot service recreates the registry. `rollback` returns
+store is empty and a oneshot service, started with docker, recreates the registry.
+`update` rewrites the store script and that service on an installed host. `rollback` returns
 to the on-disk store. Not tmpfs: before kernel 6.6 it has no `user.*` xattrs,
 containerd's overlay differ then fails on every layer and its fallback can
 collide with itself.

@@ -12,6 +12,7 @@ set -euo pipefail
 # collide with itself ("ref ... locked ... unavailable").
 #
 #   containerd-in-zram.sh install    create the zram store, limit the build cache, restart docker
+#   containerd-in-zram.sh update     rewrite the store script and units on an installed host
 #   containerd-in-zram.sh rollback   back to the on-disk store, which the mounts only hid
 #   containerd-in-zram.sh status
 #
@@ -99,8 +100,17 @@ ROOT=/var/lib/docker-ram
 STATE=/run/zram-docker-store.dev
 case "\${1:-}" in
   start)
+    mountpoint -q /var/lib/containerd && exit 0
     modprobe zram
-    dev=\$(zramctl --find --size $DISK_SIZE --algorithm lz4)
+    dev=""
+    for _ in \$(seq 1 10); do
+      # udev still probes a fresh zram device right after modprobe, zramctl then fails with "busy"
+      udevadm settle --timeout=10 || true
+      dev=\$(zramctl --find --size $DISK_SIZE --algorithm lz4) && break
+      dev=""
+      sleep 2
+    done
+    [ -n "\$dev" ] || { echo "no zram device after 10 attempts" >&2; exit 1; }
     echo "\$dev" > "\$STATE"
     echo $MEM_LIMIT > "$ZRAM_SYSFS/\$(basename "\$dev")/mem_limit"
     mkfs.ext4 -q -F "\$dev"
@@ -119,6 +129,35 @@ case "\${1:-}" in
 esac
 EOF
   chmod 0755 "$STORE_SCRIPT"
+}
+
+write_registry_ensure() {
+  echo "== installing the registry recreation after boot"
+  install -m 0755 "$SCRIPT_DIR/setup-local-registry.sh" "$REGISTRY_SCRIPT"
+  cat > "$ENSURE_SCRIPT" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+# The registry container survives in /var/lib/docker, its image did not.
+if [ "\$(docker inspect -f '{{.State.Running}}' buildcache-registry 2>/dev/null)" != "true" ]; then
+  docker rm -f buildcache-registry >/dev/null 2>&1 || true
+  $REGISTRY_SCRIPT
+fi
+EOF
+  chmod 0755 "$ENSURE_SCRIPT"
+  # Wanted by docker, not requiring it: a docker start that failed at boot and
+  # succeeded later would otherwise never run this.
+  cat > "$UNIT_DIR/$ENSURE_UNIT" <<EOF
+[Unit]
+Description=Recreate the build cache registry when the image store is empty
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=$ENSURE_SCRIPT
+
+[Install]
+WantedBy=docker.service
+EOF
 }
 
 do_install() {
@@ -170,31 +209,7 @@ EOF
     '.builder.gc = {"enabled": true, "defaultMaxUsedSpace": $max, "defaultMinFreeSpace": $free}' \
     "$DAEMON_BACKUP" > "$DAEMON_JSON"
 
-  echo "== installing the registry recreation after boot"
-  install -m 0755 "$SCRIPT_DIR/setup-local-registry.sh" "$REGISTRY_SCRIPT"
-  cat > "$ENSURE_SCRIPT" <<EOF
-#!/usr/bin/env bash
-set -euo pipefail
-# The registry container survives in /var/lib/docker, its image did not.
-if [ "\$(docker inspect -f '{{.State.Running}}' buildcache-registry 2>/dev/null)" != "true" ]; then
-  docker rm -f buildcache-registry >/dev/null 2>&1 || true
-  $REGISTRY_SCRIPT
-fi
-EOF
-  chmod 0755 "$ENSURE_SCRIPT"
-  cat > "$UNIT_DIR/$ENSURE_UNIT" <<EOF
-[Unit]
-Description=Recreate the build cache registry when the image store is empty
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=oneshot
-ExecStart=$ENSURE_SCRIPT
-
-[Install]
-WantedBy=multi-user.target
-EOF
+  write_registry_ensure
 
   echo "== daily cleanup of images older than ${IMAGE_MAX_AGE}"
   echo "15 3 * * * root docker image prune -a -f --filter until=${IMAGE_MAX_AGE} >/dev/null 2>&1" > "$CRON_FILE"
@@ -207,12 +222,25 @@ EOF
   done
   start_docker
   recreate_registry
-  systemctl enable "$ENSURE_UNIT"
+  systemctl reenable "$ENSURE_UNIT"
 
   echo ""
   do_status
   echo ""
   echo "done, the image store is in zram; the first builds pull from the registry cache"
+}
+
+do_update() {
+  [ "$(id -u)" = "0" ] || { echo "run as root"; exit 1; }
+  systemctl is-active --quiet "$STORE_UNIT" || { echo "not in zram, run install"; exit 1; }
+  echo "== rewriting the store script and the registry recreation"
+  write_store_script
+  write_registry_ensure
+  systemctl daemon-reload
+  # reenable drops the old multi-user.target link
+  systemctl reenable "$ENSURE_UNIT"
+  systemctl start "$ENSURE_UNIT"
+  do_status
 }
 
 do_rollback() {
@@ -239,7 +267,8 @@ do_rollback() {
 
 case "${1:-}" in
   install) do_install ;;
+  update) do_update ;;
   rollback) do_rollback ;;
   status) do_status ;;
-  *) echo "usage: $(basename "$0") {install|rollback|status}" >&2; exit 2 ;;
+  *) echo "usage: $(basename "$0") {install|update|rollback|status}" >&2; exit 2 ;;
 esac
