@@ -266,6 +266,11 @@ runs:
       if: inputs.ACTION_ENABLE_TESTING == 'true'
       id: tester
       uses: docker/build-push-action@v7
+      # Build records contain the build args unmasked (PAT), and every reader
+      # of the repo can download them. Off until no secret is a build arg.
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+        DOCKER_BUILD_SUMMARY: false
       with:
         builder: ${{ env.BUILDER_NAME }}
         context: ${{ inputs.DOCKER_CONTEXT }}
@@ -306,6 +311,11 @@ runs:
 
     - name: Build and push
       uses: docker/build-push-action@v7
+      # Build records contain the build args unmasked (PAT), and every reader
+      # of the repo can download them. Off until no secret is a build arg.
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+        DOCKER_BUILD_SUMMARY: false
       with:
         builder: ${{ env.BUILDER_NAME }}
         context: ${{ inputs.DOCKER_CONTEXT }}
